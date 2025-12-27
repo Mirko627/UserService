@@ -7,7 +7,7 @@
 	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	  <PackageId>Mirko.UserService.ClientHttp</PackageId>
 	  <Version>1.0.0</Version>
-	  <Authors>Mirko</Authors>
+	  <Authors>Mirko Ferrari</Authors>
 	  <RepositoryUrl>https://github.com/Mirko627/UserService</RepositoryUrl>
   </PropertyGroup>
 </Project>

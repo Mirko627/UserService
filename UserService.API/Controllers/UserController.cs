@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using UserService.Business.Interfaces;
 using UserService.Shared.dtos;
 
@@ -26,8 +28,6 @@ namespace UserService.API.Controllers
         public async Task<IActionResult> GetById(int id)
         {
             UserDto? p = await _service.GetUserByIdAsync(id);
-            if (p == null)
-                return NotFound();
             return Ok(p);
         }
 
@@ -35,31 +35,50 @@ namespace UserService.API.Controllers
         public async Task<IActionResult> Add([FromBody] CreateUserDto user)
         {
             await _service.AddAsync(user);
-            return Ok();
+            return Created();
         }
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto user)
         {
-            await _service.UpdateAsync(id, user);
-            return Ok();
+            int userId = GetUserId();
+            await _service.UpdateAsync(id, user, userId);
+            return Ok(new { message = "Utente aggiornato con successo" });
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> Delete(int id)
         {
-            await _service.DeleteAsync(id);
-            return Ok();
+            int userId = GetUserId();
+            await _service.DeleteAsync(id, userId);
+            return Ok(new { message = "Utente eliminato con successo" });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            string? token = await _service.LoginAsync(loginDto);
-
-            if (token == null)
-                return Unauthorized("Username o Password errati");
-
+            string token = await _service.LoginAsync(loginDto);
             return Ok(new { Token = token });
+        }
+        [HttpPatch("change-password/{id}")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
+        {
+            int userId = GetUserId();
+            await _service.ChangePasswordAsync(id, dto, userId);
+            return Ok(new { message = "Password cambiata con successo" });
+        }
+        private int GetUserId()
+        {
+            string? userIdClaim =
+                User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                User.FindFirst("id")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+                throw new UnauthorizedAccessException("ID utente non trovato nel token");
+
+            return int.Parse(userIdClaim);
         }
     }
 }

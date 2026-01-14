@@ -11,17 +11,23 @@ using UserService.Repository.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext
+// DbContext + retry SQL
 builder.Services.AddDbContext<UserDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("UserDb") ?? throw new InvalidOperationException("Connection string 'UserDb' not found.")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("UserDb"),
+        sql => sql.EnableRetryOnFailure()
+    )
+);
 
+// AutoMapper
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<UserMapper>();
 });
+
+// JWT
 builder.Services.AddAuthentication(options =>
 {
-    // Impostiamo JWT come schema predefinito
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
@@ -34,52 +40,46 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidIssuer = "UserService",
-        ValidAudience = "ProjectMicroservizi", 
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2"))
+        ValidAudience = "ProjectMicroservizi",
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes("b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2")
+        )
     };
 });
-// Services e repository
+
+// Services
 builder.Services.AddScoped<IUserService, UserService.Business.Services.UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-
-// Controllers
 builder.Services.AddControllers();
-
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "User Service API", Version = "v1" });
-
-    // Aggiunge la definizione dello schema di sicurezza (il lucchetto)
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Inserisci il token JWT nel formato: Bearer {tuo_token}"
-    });
-
-    // Rende obbligatorio il lucchetto per le chiamate
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
 });
+
 var app = builder.Build();
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UserDBContext>();
+
+    var retries = 10;
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch
+        {
+            retries--;
+            Thread.Sleep(3000);
+        }
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {

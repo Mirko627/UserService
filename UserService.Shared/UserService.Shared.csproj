@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	  <PackageId>Mirko.UserService.Shared</PackageId>
+	  <Version>0.0.1</Version>
+	  <Authors>Mirko Ferrari</Authors>
+	  <RepositoryUrl>https://github.com/Mirko627/UserService</RepositoryUrl>
+  </PropertyGroup>
+</Project>

@@ -15,31 +15,58 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      MIRKO_NUGET_USERNAME: ${{ secrets.MIRKO_NUGET_USERNAME }}
-      MIRKO_NUGET_PWD: ${{ secrets.MIRKO_NUGET_PWD }}
-
     steps:
+      # =========================
+      # Checkout
+      # =========================
       - name: Checkout
         uses: actions/checkout@v4
 
+      # =========================
+      # Setup .NET
+      # =========================
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
+      # =========================
+      # AUTH NuGet (GitHub Packages)
+      # =========================
+      - name: Setup NuGet source
+        run: |
+          dotnet nuget remove source github || true
+
+          dotnet nuget add source https://nuget.pkg.github.com/Mirko627/index.json \
+            --name github \
+            --username ${{ secrets.MIRKO_NUGET_USERNAME }} \
+            --password ${{ secrets.MIRKO_NUGET_PWD }} \
+            --store-password-in-clear-text
+
+      # =========================
+      # RESTORE
+      # =========================
       - name: Restore
         run: dotnet restore
 
+      # =========================
+      # BUILD
+      # =========================
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      # =========================
+      # PACK
+      # =========================
       - name: Pack
         run: dotnet pack --configuration Release --no-build
 
-      - name: Push packages to GitHub Packages
+      # =========================
+      # PUSH (GitHub Packages)
+      # =========================
+      - name: Push packages
         run: |
           dotnet nuget push "**/bin/Release/*.nupkg" \
-            --source "Mirko627" \
+            --source "github" \
             --api-key ${{ secrets.MIRKO_NUGET_PWD }} \
             --skip-duplicate

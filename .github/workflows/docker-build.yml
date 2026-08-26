@@ -1,5 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
-
 name: Docker
 
 on:
@@ -20,16 +18,25 @@ jobs:
       packages: write
 
     steps:
+      # =========================
+      # Checkout repo
+      # =========================
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login to GitHub Container Registry
+      # =========================
+      # Login GitHub Container Registry
+      # =========================
+      - name: Login to GHCR
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
+          registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # =========================
+      # Metadata immagine Docker
+      # =========================
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -40,14 +47,17 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
 
+      # =========================
+      # Build & Push Docker image
+      # =========================
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: UserService.API/Dockerfile
+          push: true
           build-args: |
             MIRKO_NUGET_USERNAME=${{ secrets.MIRKO_NUGET_USERNAME }}
             MIRKO_NUGET_PWD=${{ secrets.MIRKO_NUGET_PWD }}
-          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -8,6 +8,8 @@ using UserService.Business.Mappers;
 using UserService.Data.Context;
 using UserService.Data.Repositories;
 using UserService.Repository.Interfaces;
+using UserService.API.middlewares;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,6 +88,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

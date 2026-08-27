@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 
-namespace NotificationService.API.middlewares
+namespace UserService.API.middlewares
 {
     public class ExceptionMiddleware
     {

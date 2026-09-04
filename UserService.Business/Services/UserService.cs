@@ -21,22 +21,22 @@ namespace UserService.Business.Services
             this.mapper = mapper;
         }
 
-        public async Task<List<UserDto>> GetAllAsync()
+        public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default)
         {
-            List<User> users = await repository.GetAllAsync();
+            List<User> users = await repository.GetAllAsync(ct);
             return mapper.Map<List<UserDto>>(users);
         }
 
-        public async Task<UserDto> GetUserByIdAsync(int id)
+        public async Task<UserDto> GetUserByIdAsync(int id, CancellationToken ct = default)
         {
-            User user = await repository.GetUserByIdAsync(id) ?? throw new KeyNotFoundException($"Utente con ID {id} non trovato.");
+            User user = await repository.GetUserByIdAsync(id, ct) ?? throw new KeyNotFoundException($"Utente con ID {id} non trovato.");
 
             return mapper.Map<UserDto>(user);
         }
 
-        public async Task AddAsync(CreateUserDto userDto)
+        public async Task AddAsync(CreateUserDto userDto, CancellationToken ct = default)
         {
-            User? existingUser = await repository.GetUserByUsernameAsync(userDto.UserName);
+            User? existingUser = await repository.GetUserByUsernameAsync(userDto.UserName, ct);
             if (existingUser != null)
                 throw new InvalidOperationException($"Lo username '{userDto.UserName}' è già in uso.");
 
@@ -45,31 +45,31 @@ namespace UserService.Business.Services
             u.LastModified = DateTime.UtcNow;
             u.Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
 
-            await repository.AddAsync(u);
+            await repository.AddAsync(u, ct);
         }
 
-        public async Task DeleteAsync(int id, int userId)
+        public async Task DeleteAsync(int id, int userId, CancellationToken ct = default)
         {
             if (userId != id) throw new UnauthorizedAccessException("Non hai i permessi per eliminare questo utente.");
-            User user = await repository.GetUserByIdAsync(id) ?? throw new KeyNotFoundException($"Impossibile eliminare: utente con ID {id} non trovato.");
-            await repository.DeleteAsync(id);
+            User user = await repository.GetUserByIdAsync(id, ct) ?? throw new KeyNotFoundException($"Impossibile eliminare: utente con ID {id} non trovato.");
+            await repository.DeleteAsync(id, ct);
         }
 
-        public async Task UpdateAsync(int id, UpdateUserDto userDto, int userId)
+        public async Task UpdateAsync(int id, UpdateUserDto userDto, int userId, CancellationToken ct = default)
         {
             if (userId != id) throw new UnauthorizedAccessException("Non hai i permessi per modificare questo utente.");
-            User user = await repository.GetUserByIdAsync(id) ?? throw new KeyNotFoundException($"Impossibile eliminare: utente con ID {id} non trovato.");
+            User user = await repository.GetUserByIdAsync(id, ct) ?? throw new KeyNotFoundException($"Impossibile eliminare: utente con ID {id} non trovato.");
 
             mapper.Map(userDto, user);
             user.LastModified = DateTime.UtcNow;
 
-            await repository.UpdateAsync(user);
+            await repository.UpdateAsync(user, ct);
         }
 
-        public async Task ChangePasswordAsync(int id, ChangePasswordDto dto, int userId)
+        public async Task ChangePasswordAsync(int id, ChangePasswordDto dto, int userId, CancellationToken ct = default)
         {
             if (userId != id) throw new UnauthorizedAccessException("Non hai i permessi per modificare questo utente.");
-            User user = await repository.GetUserByIdAsync(id) ?? throw new KeyNotFoundException($"Impossibile eliminare: utente con ID {id} non trovato.");
+            User user = await repository.GetUserByIdAsync(id, ct) ?? throw new KeyNotFoundException($"Impossibile eliminare: utente con ID {id} non trovato.");
 
             bool isOldPasswordCorrect = BCrypt.Net.BCrypt.Verify(dto.OldPassword, user.Password);
             if (!isOldPasswordCorrect) throw new UnauthorizedAccessException("La vecchia password non è corretta.");
@@ -79,12 +79,12 @@ namespace UserService.Business.Services
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
             user.LastModified = DateTime.UtcNow;
 
-            await repository.UpdateAsync(user);
+            await repository.UpdateAsync(user, ct);
         }
 
-        public async Task<string> LoginAsync(LoginDto dto)
+        public async Task<string> LoginAsync(LoginDto dto, CancellationToken ct = default)
         {
-            User userEntity = await repository.GetUserByUsernameAsync(dto.Username) ?? throw new UnauthorizedAccessException("Credenziali non valide.");
+            User userEntity = await repository.GetUserByUsernameAsync(dto.Username, ct) ?? throw new UnauthorizedAccessException("Credenziali non valide.");
 
             if (userEntity == null || !BCrypt.Net.BCrypt.Verify(dto.Password, userEntity.Password)) throw new UnauthorizedAccessException("Credenziali non valide.");
 

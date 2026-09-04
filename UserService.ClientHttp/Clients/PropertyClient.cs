@@ -17,69 +17,69 @@ namespace UserService.ClientHttp.Clients
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<List<UserDto>> GetAllAsync()
+        public async Task<List<UserDto>> GetAllAsync(CancellationToken ct = default)
         {
-            return await _httpClient.GetFromJsonAsync<List<UserDto>>("api/user") ?? [];
+            return await _httpClient.GetFromJsonAsync<List<UserDto>>("api/user", ct) ?? [];
         }
 
-        public async Task<UserDto?> GetByIdAsync(int id)
+        public async Task<UserDto?> GetByIdAsync(int id, CancellationToken ct = default)
         {
-            var response = await _httpClient.GetAsync($"api/user/{id}");
+            var response = await _httpClient.GetAsync($"api/user/{id}", ct);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
-            return await response.Content.ReadFromJsonAsync<UserDto>();
+            return await response.Content.ReadFromJsonAsync<UserDto>(ct);
         }
 
-        public async Task AddAsync(CreateUserDto user)
+        public async Task AddAsync(CreateUserDto user, CancellationToken ct = default)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "api/user");
             request.Content = JsonContent.Create(user);
 
             AddAuthorizationHeader(request);
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            HttpResponseMessage response = await _httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task UpdateAsync(int id, UpdateUserDto user)
+        public async Task UpdateAsync(int id, UpdateUserDto user, CancellationToken ct = default)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"api/user/{id}");
             request.Content = JsonContent.Create(user);
 
             AddAuthorizationHeader(request);
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            HttpResponseMessage response = await _httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
         }
-        public async Task ChangePasswordAsync(int id, ChangePasswordDto passwordDto)
+        public async Task ChangePasswordAsync(int id, ChangePasswordDto passwordDto, CancellationToken ct = default)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Patch, $"api/user/change-password/{id}");
             request.Content = JsonContent.Create(passwordDto);
 
             AddAuthorizationHeader(request);
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            HttpResponseMessage response = await _httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
         }
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, $"api/user/{id}");
 
             AddAuthorizationHeader(request);
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request);
+            HttpResponseMessage response = await _httpClient.SendAsync(request, ct);
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task<string?> LoginAsync(LoginDto loginDto)
+        public async Task<string?> LoginAsync(LoginDto loginDto, CancellationToken ct = default)
         {
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/user/login", loginDto);
+            HttpResponseMessage response = await _httpClient.PostAsJsonAsync("api/user/login", loginDto, ct);
 
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>(ct);
             return result?.Token;
         }
         private void AddAuthorizationHeader(HttpRequestMessage request)

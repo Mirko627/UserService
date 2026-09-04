@@ -18,55 +18,55 @@ namespace UserService.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll(CancellationToken ct)
         {
-            List<UserDto> users = await _service.GetAllAsync();
+            List<UserDto> users = await _service.GetAllAsync(ct);
             return Ok(users);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(int id, CancellationToken ct)
         {
-            UserDto? p = await _service.GetUserByIdAsync(id);
+            UserDto? p = await _service.GetUserByIdAsync(id, ct);
             return Ok(p);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Add([FromBody] CreateUserDto user)
+        public async Task<IActionResult> Add([FromBody] CreateUserDto user, CancellationToken ct)
         {
-            await _service.AddAsync(user);
+            await _service.AddAsync(user, ct);
             return Created();
         }
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto user)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto user, CancellationToken ct)
         {
             int userId = GetUserId();
-            await _service.UpdateAsync(id, user, userId);
+            await _service.UpdateAsync(id, user, userId, ct);
             return Ok(new { message = "Utente aggiornato con successo" });
         }
 
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id, CancellationToken ct)
         {
             int userId = GetUserId();
-            await _service.DeleteAsync(id, userId);
+            await _service.DeleteAsync(id, userId, ct);
             return Ok(new { message = "Utente eliminato con successo" });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto, CancellationToken ct)
         {
-            string token = await _service.LoginAsync(loginDto);
+            string token = await _service.LoginAsync(loginDto, ct);
             return Ok(new { Token = token });
         }
         [HttpPatch("change-password/{id}")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto)
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordDto dto, CancellationToken ct)
         {
             int userId = GetUserId();
-            await _service.ChangePasswordAsync(id, dto, userId);
+            await _service.ChangePasswordAsync(id, dto, userId, ct);
             return Ok(new { message = "Password cambiata con successo" });
         }
         private int GetUserId()

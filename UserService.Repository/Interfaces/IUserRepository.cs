@@ -4,11 +4,11 @@ namespace UserService.Repository.Interfaces
 {
     public interface IUserRepository
     {
-        Task<List<User>> GetAllAsync();
-        Task<User?> GetUserByIdAsync(int id);
-        Task<User?> GetUserByUsernameAsync(string username);
-        Task AddAsync(User user);
-        Task UpdateAsync(User user);
-        Task DeleteAsync(int id);
+        Task<List<User>> GetAllAsync(CancellationToken ct = default);
+        Task<User?> GetUserByIdAsync(int id, CancellationToken ct = default);
+        Task<User?> GetUserByUsernameAsync(string username, CancellationToken ct = default);
+        Task AddAsync(User user, CancellationToken ct = default);
+        Task UpdateAsync(User user, CancellationToken ct = default);
+        Task DeleteAsync(int id, CancellationToken ct = default);
     }
 }

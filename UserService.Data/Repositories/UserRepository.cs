@@ -14,41 +14,41 @@ namespace UserService.Data.Repositories
             _context = context;
         }
 
-        public async Task<List<User>> GetAllAsync()
+        public async Task<List<User>> GetAllAsync(CancellationToken ct = default)
         {
-            List<User> users = await _context.users.ToListAsync();
+            List<User> users = await _context.users.ToListAsync(ct);
             return users;
         }
 
-        public async Task<User?> GetUserByIdAsync(int id)
+        public async Task<User?> GetUserByIdAsync(int id, CancellationToken ct = default)
         {
-            User? user = await _context.users.FindAsync(id);
+            User? user = await _context.users.FindAsync(id, ct);
             return user;
         }
-        public async Task<User?> GetUserByUsernameAsync(string username)
+        public async Task<User?> GetUserByUsernameAsync(string username, CancellationToken ct = default)
         {
-            User? user = await _context.users.FirstOrDefaultAsync(u => u.UserName == username); 
+            User? user = await _context.users.FirstOrDefaultAsync(u => u.UserName == username, ct); 
             return user;
         }
-        public async Task AddAsync(User user)
+        public async Task AddAsync(User user, CancellationToken ct = default)
         {
-            await _context.users.AddAsync(user);
-            await _context.SaveChangesAsync();
+            await _context.users.AddAsync(user, ct);
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(int id, CancellationToken ct = default)
         {
-            User? u = await GetUserByIdAsync(id);
+            User? u = await GetUserByIdAsync(id, ct);
             if (u == null)
                 throw new Exception("Utente non trovato");
             _context.users.Remove(u);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
 
-        public async Task UpdateAsync(User user)
+        public async Task UpdateAsync(User user, CancellationToken ct = default)
         {
             _context.users.Update(user);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(ct);
         }
     }
 }

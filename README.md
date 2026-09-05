@@ -33,7 +33,7 @@ docker-compose up
 Il servizio sarà disponibile su:
 
 ```
-http://localhost:7800
+http://localhost:7802
 ```
 
 ## API
@@ -41,7 +41,7 @@ http://localhost:7800
 Documentazione Swagger disponibile qui:
 
 ```
-http://localhost:7800/swagger/index.html
+http://localhost:7802/swagger/index.html
 ```
 
 ## Autenticazione e autorizzazione

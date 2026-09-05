@@ -9,7 +9,7 @@ using UserService.Data.Context;
 using UserService.Data.Repositories;
 using UserService.Repository.Interfaces;
 using UserService.API.middlewares;
-
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,7 +53,14 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddScoped<IUserService, UserService.Business.Services.UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-builder.Services.AddControllers();
+// Controllers
+builder.Services.AddControllers().AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter()
+        );
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
